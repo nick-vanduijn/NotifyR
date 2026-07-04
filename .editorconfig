@@ -1,0 +1,66 @@
+root = true
+
+[*]
+indent_style = space
+indent_size = 4
+charset = utf-8
+end_of_line = lf
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.cs]
+indent_size = 4
+max_line_length = 160
+
+[*.{csproj,xml,config}]
+indent_size = 2
+
+[*.{json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.cs]
+dotnet_naming_rule.private_fields_rule.symbols  = private_fields
+dotnet_naming_rule.private_fields_rule.style    = underscore_prefix
+dotnet_naming_rule.private_fields_rule.severity = suggestion
+dotnet_naming_symbols.private_fields.applicable_kinds           = field
+dotnet_naming_symbols.private_fields.applicable_accessibilities = private
+dotnet_naming_style.underscore_prefix.required_prefix = _
+dotnet_naming_style.underscore_prefix.capitalization = camel_case
+
+dotnet_naming_rule.static_readonly_fields_rule.symbols  = static_readonly_fields
+dotnet_naming_rule.static_readonly_fields_rule.style    = s_underscore_prefix
+dotnet_naming_rule.static_readonly_fields_rule.severity = suggestion
+dotnet_naming_symbols.static_readonly_fields.applicable_kinds           = field
+dotnet_naming_symbols.static_readonly_fields.applicable_accessibilities = private, internal, protected, protected_internal, public
+dotnet_naming_symbols.static_readonly_fields.required_modifiers         = static, readonly
+dotnet_naming_style.s_underscore_prefix.required_prefix = s_
+dotnet_naming_style.s_underscore_prefix.capitalization = camel_case
+
+dotnet_naming_rule.public_members_rule.symbols  = public_members
+dotnet_naming_rule.public_members_rule.style    = pascal_case
+dotnet_naming_rule.public_members_rule.severity = suggestion
+dotnet_naming_symbols.public_members.applicable_kinds           = method, property, event, delegate, class, struct, interface, enum, namespace
+dotnet_naming_symbols.public_members.applicable_accessibilities = public, internal, protected, protected_internal
+dotnet_naming_style.pascal_case.capitalization = pascal_case
+
+dotnet_naming_rule.parameters_rule.symbols  = parameters_and_locals
+dotnet_naming_rule.parameters_rule.style    = camel_case
+dotnet_naming_rule.parameters_rule.severity = suggestion
+dotnet_naming_symbols.parameters_and_locals.applicable_kinds = parameter, local
+dotnet_naming_style.camel_case.capitalization = camel_case
+
+dotnet_naming_rule.interface_rule.symbols  = interfaces
+dotnet_naming_rule.interface_rule.style    = i_prefix
+dotnet_naming_rule.interface_rule.severity = suggestion
+dotnet_naming_symbols.interfaces.applicable_kinds = interface
+dotnet_naming_style.i_prefix.required_prefix = I
+dotnet_naming_style.i_prefix.capitalization = pascal_case
+
+# Do not suggest making interface implementations static
+dotnet_diagnostic.IDE0040.severity = none
+
+# Marker interface IRequest<TResponse> uses TResponse purely for compile-time type safety
+dotnet_diagnostic.S2326.severity = none

@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Build and pack
+        run: |
+          dotnet restore
+          dotnet pack src/NotifyR --no-restore --configuration Release
+
+      - name: Publish to NuGet
+        run: |
+          dotnet nuget push src/NotifyR/bin/Release/*.nupkg \
+            --source https://api.nuget.org/v3/index.json \
+            --api-key ${{ secrets.NUGET_API_KEY }}
+
+  deploy-docs:
+    runs-on: ubuntu-latest
+    needs: publish
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build documentation
+        run: |
+          brew install mdbook
+          mdbook build docs/
+
+      - name: Upload documentation artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/book/
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4

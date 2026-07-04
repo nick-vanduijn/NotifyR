@@ -1,0 +1,7 @@
+[book]
+title = "NotifyR Documentation"
+authors = ["LiteMediator"]
+language = "en"
+
+[output.html]
+no-section-label = true

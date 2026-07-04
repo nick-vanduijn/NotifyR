@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - run: dotnet restore
+      - run: dotnet build --no-restore --configuration Release
+
+      - name: Run tests with coverage
+        run: |
+          dotnet test --no-build --configuration Release \
+            --collect:"XPlat Code Coverage" \
+            --results-directory TestResults
+
+      - name: Generate coverage report
+        uses: danielpalme/ReportGenerator-GitHub-Action@v5
+        with:
+          reports: TestResults/**/coverage.cobertura.xml
+          targetdir: CoverageReport
+          reporttypes: MarkdownSummaryGithub
+
+      - name: Check coverage >= 80%
+        shell: pwsh
+        run: |
+          $summary = Get-Content CoverageReport/Summary.md -Raw
+          $match = [regex]::Match($summary, 'Line coverage:\s*([\d.]+)%')
+          if (-not $match.Success) { throw "Could not parse coverage" }
+          $coverage = [double]::Parse($match.Groups[1].Value)
+          if ($coverage -lt 80) { throw "Coverage ${coverage}% < 80%" }
+
+      - name: Build documentation
+        run: |
+          brew install mdbook
+          mdbook build docs/
+
+      - name: Upload documentation artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/book/

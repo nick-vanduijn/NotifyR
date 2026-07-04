@@ -1,11 +1,15 @@
 using Microsoft.Extensions.DependencyInjection;
+using System.Runtime.CompilerServices;
 
 namespace NotifyR;
 
 internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : IRequestHandlerWrapperBase<TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private static volatile bool s_noBehaviors;
+    private static readonly ConditionalWeakTable<object, object> s_noBehaviorsCache = new();
+    private static readonly object s_sentinel = new();
+    private static readonly ConditionalWeakTable<object, object>.CreateValueCallback s_addSentinel =
+        static _ => s_sentinel;
 
     Task<TResponse> IRequestHandlerWrapperBase<TResponse>.Handle(
         IRequest<TResponse> request,
@@ -21,13 +25,16 @@ internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : IRequestH
 
     private static IPipelineBehavior<TRequest, TResponse>[] GetBehaviors(IServiceProvider provider)
     {
-        if (s_noBehaviors)
+        var scopeFactory = provider.GetService<IServiceScopeFactory>();
+        var key = scopeFactory ?? (object)provider;
+
+        if (s_noBehaviorsCache.TryGetValue(key, out _))
             return [];
 
         var behaviors = provider.GetServices<IPipelineBehavior<TRequest, TResponse>>().ToArray();
 
         if (behaviors.Length is 0)
-            s_noBehaviors = true;
+            s_noBehaviorsCache.GetValue(key, s_addSentinel);
 
         return behaviors;
     }

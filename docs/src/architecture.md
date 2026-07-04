@@ -58,7 +58,7 @@ IMediator.Send(request)
       → RequestHandlerWrapperFactory.Create (if cache miss)
     → RequestHandlerWrapperImpl.Handle
       → GetRequiredService<IRequestHandler<TRequest, TResponse>>
-      → GetBehaviors (with no-behavior cache)
+      → GetBehaviors (no-behavior flag cached per-provider via ConditionalWeakTable)
       → BuildPipeline (BehaviorChain)
       → pipeline(request, ct)
 ```

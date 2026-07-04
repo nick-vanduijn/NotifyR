@@ -90,9 +90,13 @@ Each `BehaviorChain` node stores:
 
 No closures are allocated — each node is an explicit class with stored fields.
 
-## No-behavior optimization
+## No-behavior cache (per-root-container)
 
-When zero behaviors are registered for a request type, a `volatile bool` is set to `true` on first call. Subsequent calls skip the DI `GetServices` call entirely, avoiding the array allocation.
+When zero behaviors are registered for a given request type, a sentinel is cached using a `ConditionalWeakTable`. The cache key is `IServiceScopeFactory` (a singleton per root DI container), so the optimization is shared across all scopes within the same container. If the container does not expose `IServiceScopeFactory`, the provider itself is used as the key.
+
+On subsequent calls, the cache hit avoids the `GetServices`+`ToArray` call entirely.
+
+When one or more behaviors are registered, they are resolved from DI on every `Send` — no caching of resolved instances occurs. This preserves correct DI lifetime semantics: transient behaviors are created fresh per call, scoped behaviors live for the scope, and singleton behaviors are created once.
 
 ## Registration
 

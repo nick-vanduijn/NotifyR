@@ -2,7 +2,7 @@
 
 ## `INotification`
 
-A marker interface for notification messages:
+`INotification` marks a message as something that can be published to multiple consumers. Notifications usually represent facts that have already happened, such as a user being created or an order being submitted.
 
 ```csharp
 public interface INotification { }
@@ -15,7 +15,7 @@ public class UserCreated : INotification
 
 ## `INotificationHandler<TNotification>`
 
-Implement this to handle a notification:
+Implement this interface when a notification should trigger a reaction. Unlike request handlers, notification handlers do not return a value. Their job is to perform the side effect associated with the event.
 
 ```csharp
 public interface INotificationHandler<in TNotification>
@@ -25,7 +25,7 @@ public interface INotificationHandler<in TNotification>
 }
 ```
 
-Multiple handlers can subscribe to the same notification type:
+Multiple handlers can subscribe to the same notification type. This is where notifications become especially useful: the publisher stays simple while new reactions can be added independently.
 
 ```csharp
 public class LogUserCreated : INotificationHandler<UserCreated> { /* ... */ }
@@ -34,22 +34,19 @@ public class EmailUserCreated : INotificationHandler<UserCreated> { /* ... */ }
 
 ## How `Publish` works
 
-1. `IMediator.Publish(notification)` is called
-2. `WrapperCache` looks up or creates a `NotificationHandlerWrapperImpl<TNotification>`
-3. The wrapper resolves ALL `INotificationHandler<TNotification>` from DI
-4. Each handler is invoked sequentially
-5. Cancellation is checked before each handler
-6. Exceptions are collected, not thrown immediately
+When you call `IMediator.Publish(notification)`, NotifyR resolves the wrapper for the notification type and then asks dependency injection for every matching handler. Those handlers are invoked sequentially so the library can preserve predictable execution order and respect cancellation between each step.
+
+The dispatch model is deliberately simple. There is no hidden event bus or background queue in the middle of the call. The publish operation runs in-process, which means the notification completes only after the subscribed handlers have finished.
 
 ## Error handling
 
-- If a single handler throws, that exception is rethrown unwrapped
-- If multiple handlers throw, an `AggregateException` wrapping all exceptions is thrown
-- Handlers continue executing even if a previous handler throws — all handlers get a chance to run
+Error handling is designed to preserve as much information as possible. If only one handler fails, NotifyR rethrows that failure directly. If several handlers fail, it wraps them in an `AggregateException` so the caller can see the full set of problems instead of only the first one.
+
+Handlers continue executing even when one of them throws. That behavior matters when the handlers represent independent side effects, such as audit logging and email delivery, because one failure should not prevent the others from running unless cancellation has been requested. The exception (or `AggregateException`) is surfaced to the caller only after all handlers have completed.
 
 ## Registration
 
-Handlers are auto-discovered via assembly scanning and registered with the configured lifetime:
+Handlers are usually discovered through assembly scanning. That keeps registration close to the application boundary and avoids manually registering every notification handler one by one.
 
 ```csharp
 services.AddNotifyR(cfg =>
@@ -57,3 +54,5 @@ services.AddNotifyR(cfg =>
     cfg.RegisterServicesFromAssemblyContaining<MyHandler>();
 });
 ```
+
+If you scan the assembly that contains your handlers, NotifyR will discover the matching `INotificationHandler<TNotification>` implementations and register them using the configured lifetime.

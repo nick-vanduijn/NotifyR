@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.1
+
+- Stable production release
+
 ## 0.1.0
 
 - Initial release

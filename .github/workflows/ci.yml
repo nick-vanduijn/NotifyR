@@ -36,7 +36,7 @@ jobs:
       - name: Check coverage >= 80%
         shell: pwsh
         run: |
-          $summary = Get-Content CoverageReport/Summary.md -Raw
+          $summary = Get-Content CoverageReport/SummaryGithub.md -Raw
           $match = [regex]::Match($summary, 'Line coverage:\s*([\d.]+)%')
           if (-not $match.Success) { throw "Could not parse coverage" }
           $coverage = [double]::Parse($match.Groups[1].Value)

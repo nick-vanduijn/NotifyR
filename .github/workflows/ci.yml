@@ -11,9 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@v5
         with:
           dotnet-version: 10.0.x
 
@@ -36,18 +36,18 @@ jobs:
       - name: Check coverage >= 80%
         shell: pwsh
         run: |
-          $summary = Get-Content CoverageReport/Summary.md -Raw
-          $match = [regex]::Match($summary, 'Line coverage:\s*([\d.]+)%')
+          $summary = Get-Content CoverageReport/SummaryGithub.md -Raw
+          $match = [regex]::Match($summary, 'Line coverage:[^|]*\|\s*([\d.]+)%')
           if (-not $match.Success) { throw "Could not parse coverage" }
           $coverage = [double]::Parse($match.Groups[1].Value)
           if ($coverage -lt 80) { throw "Coverage ${coverage}% < 80%" }
-
       - name: Build documentation
         run: |
-          brew install mdbook
+          curl -sSL https://github.com/rust-lang/mdBook/releases/download/v0.5.3/mdbook-v0.5.3-x86_64-unknown-linux-gnu.tar.gz \
+            | tar xz -C /usr/local/bin
           mdbook build docs/
 
       - name: Upload documentation artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: docs/book/

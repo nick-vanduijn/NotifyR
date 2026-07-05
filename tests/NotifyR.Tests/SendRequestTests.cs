@@ -41,7 +41,7 @@ public class SendRequestTests
     public async Task Send_CancellationTokenForwardsToHandler()
     {
         using var cts = new CancellationTokenSource();
-        cts.Cancel();
+        await cts.CancelAsync();
 
         var services = new ServiceCollection();
         services.AddNotifyR(cfg =>
@@ -50,10 +50,8 @@ public class SendRequestTests
             _ => new CancellablePingHandler());
         var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
 
-        var ex = await Assert.ThrowsAsync<OperationCanceledException>(
+        await Assert.ThrowsAsync<OperationCanceledException>(
             () => mediator.Send(new Ping("cancel"), cts.Token));
-
-        Assert.NotNull(ex);
     }
 }
 

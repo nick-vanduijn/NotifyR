@@ -11,8 +11,8 @@ Send<TResponse>(request, ct)                          ALLOCS
 └─ wrapper.Handle(request, provider, ct)
    ├─ GetRequiredService<IRequestHandler<..>>()       0-N (DI)
    ├─ GetBehaviors(provider)
-   │   ├─ volatile read s_noBehaviors                 0
    │   └─ GetServices<...>().ToArray()                1
+   │      (no-behavior flag cached per-provider via CWT)
    ├─ BuildPipeline(handler, behaviors)
    │   ├─ handler.Handle delegate                     1
    │   └─ × N behaviors:
@@ -21,11 +21,11 @@ Send<TResponse>(request, ct)                          ALLOCS
    └─ pipeline(request, ct)                           0
 ```
 
-| Scenario | Total allocations |
+| Scenario | Allocations per Send (steady-state) |
 |---|---|
-| No behaviors | **2** (handler delegate + empty array) |
-| 1 behavior | **5** |
-| 3 behaviors | **9** |
+| No behaviors | **1** (handler delegate only; no-behavior flag cached per-provider, `GetServices`+`ToArray` skipped) |
+| 1 behavior | **4** (handler delegate + `ToArray()` + BehaviorChain + invoke delegate) |
+| 3 behaviors | **8** (handler delegate + `ToArray()` + 3×(BehaviorChain + invoke delegate)) |
 
 All are small, short-lived gen-0 objects.
 

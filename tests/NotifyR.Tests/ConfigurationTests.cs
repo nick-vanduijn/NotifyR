@@ -12,7 +12,7 @@ public class ConfigurationTests
         services.AddNotifyR(cfg =>
             cfg.RegisterServicesFromAssemblyContaining<PingHandler>());
 
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
         Assert.IsType<Mediator>(mediator);
@@ -25,7 +25,7 @@ public class ConfigurationTests
         services.AddNotifyR(cfg =>
             cfg.RegisterServicesFromAssemblyContaining<PingHandler>());
 
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
         var handler = provider.GetService<IRequestHandler<Ping, Pong>>();
 
         Assert.IsType<PingHandler>(handler);
@@ -40,10 +40,28 @@ public class ConfigurationTests
         services.AddTransient<IPipelineBehavior<Ping, Pong>>(
             _ => new TestBehavior<Ping, Pong>());
 
-        var provider = services.BuildServiceProvider();
+        using var provider = services.BuildServiceProvider();
         var behaviors = provider.GetServices<IPipelineBehavior<Ping, Pong>>().ToArray();
 
         Assert.Single(behaviors);
+    }
+
+    [Fact]
+    public void AddNotifyR_WithNullServices_ThrowsArgumentNullException()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(
+            () => ((IServiceCollection)null!).AddNotifyR(cfg => { }));
+
+        Assert.Equal("services", ex.ParamName);
+    }
+
+    [Fact]
+    public void AddNotifyR_WithNullConfigure_ThrowsArgumentNullException()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(
+            () => new ServiceCollection().AddNotifyR(null!));
+
+        Assert.Equal("configure", ex.ParamName);
     }
 
     [Fact]
@@ -54,7 +72,7 @@ public class ConfigurationTests
         var ex = Assert.Throws<InvalidOperationException>(
             () => services.AddNotifyR(cfg => { }));
 
-        Assert.Contains("No assemblies registered", ex.Message);
+        Assert.Equal("No assemblies registered. Call cfg.RegisterServicesFromAssemblyContaining<T>() for at least one assembly that contains your handlers.", ex.Message);
     }
 
     [Fact]

@@ -5,10 +5,20 @@ namespace NotifyR;
 
 public static class ServiceCollectionExtensions
 {
+    private static void ValidateArguments(
+        IServiceCollection services,
+        Action<NotifyRConfiguration> configure)
+    {
+        ArgumentNullException.ThrowIfNull(services);
+        ArgumentNullException.ThrowIfNull(configure);
+    }
+
     public static IServiceCollection AddNotifyR(
         this IServiceCollection services,
         Action<NotifyRConfiguration> configure)
     {
+        ValidateArguments(services, configure);
+
         var config = new NotifyRConfiguration();
         configure(config);
 

@@ -13,6 +13,8 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
 
     steps:
       - uses: actions/checkout@v7
@@ -26,11 +28,18 @@ jobs:
           dotnet restore
           dotnet pack src/NotifyR --no-restore --configuration Release
 
+      - name: NuGet login (OIDC → temp API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ vars.NUGET_USER }}
+
       - name: Publish to NuGet
         run: |
           dotnet nuget push src/NotifyR/bin/Release/*.nupkg \
+            --skip-duplicate \
             --source https://api.nuget.org/v3/index.json \
-            --api-key ${{ secrets.NUGET_API_KEY }}
+            --api-key ${{ steps.login.outputs.NUGET_API_KEY }}
 
   deploy-docs:
     runs-on: ubuntu-latest

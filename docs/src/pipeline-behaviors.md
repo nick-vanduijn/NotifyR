@@ -97,7 +97,7 @@ When no behaviors are registered for a request type, NotifyR caches that fact us
 
 On later calls, the cache hit avoids the `GetServices` and `ToArray` work entirely. That matters because the no-behavior case is common in smaller applications and in request types that do not need cross-cutting logic.
 
-When one or more behaviors are registered, they are still resolved from dependency injection on every `Send`. NotifyR does not cache the resolved behavior instances, because doing so would interfere with the configured lifetime semantics. Transient behaviors should be created per call, scoped behaviors should live for the current scope, and singleton behaviors should be created once.
+When one or more behaviors are registered, they are resolved from dependency injection on the first `Send` for a given scope and cached using a `ConditionalWeakTable` keyed by `IServiceScopeFactory`. Subsequent calls within the same scope return the cached array. The cache is released when the scope is disposed.
 
 ## Registration
 

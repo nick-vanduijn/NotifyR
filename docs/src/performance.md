@@ -43,9 +43,9 @@ The factory result is cached in `ConcurrentDictionary` — subsequent calls pay 
 
 | Before | After |
 |---|---|
-| `async Task` — class state machine on heap | `async ValueTask` — struct state machine on stack |
+| `async ValueTask` with `.AsTask()` conversion | `async Task` directly |
 
-When no handlers are registered, the method completes synchronously. `ValueTask` keeps the state machine on the stack.
+When no handlers are registered, the method completes synchronously. The previous `ValueTask` → `Task` conversion in `Mediator.Publish` has been eliminated.
 
 ## What was removed from the hot path
 

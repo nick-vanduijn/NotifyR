@@ -11,6 +11,7 @@ public sealed class NotifyRConfiguration
 
     public NotifyRConfiguration RegisterServicesFromAssembly(Assembly assembly)
     {
+        ArgumentNullException.ThrowIfNull(assembly);
         AssembliesToScan.Add(assembly);
 
         return this;

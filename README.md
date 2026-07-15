@@ -157,6 +157,24 @@ public class LoggingBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, 
         return response;
     }
 }
+
+// Register as open generic (applies to all requests)
+services.AddTransient(typeof(IPipelineBehavior<,>), typeof(LoggingBehavior<,>));
+```
+
+### Configuration
+
+```csharp
+services.AddNotifyR(cfg =>
+{
+    cfg.RegisterServicesFromAssemblyContaining<GetUser>();
+
+    // Set the handler lifetime (default: Transient)
+    cfg.UseLifetime(ServiceLifetime.Scoped);
+
+    // Throw when publishing a notification with no registered handlers
+    cfg.SetThrowOnNoHandlers();
+});
 ```
 
 ## License

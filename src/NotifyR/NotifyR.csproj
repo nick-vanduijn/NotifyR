@@ -11,12 +11,15 @@
   <PropertyGroup>
     <PackageId>NotifyR</PackageId>
     <VersionPrefix>1.0.1</VersionPrefix>
-    <Authors>NotifyR</Authors>
+    <Authors>Nick van Duijn</Authors>
     <Description>A lightweight mediator implementation for .NET with support for requests, notifications, and pipeline behaviors.</Description>
     <PackageTags>mediator;cqrs;pipelines;notifications;ddd</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <RepositoryUrl>https://github.com/nick-vanduijn/NotifyR</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageProjectUrl>https://nick-vanduijn.github.io/NotifyR</PackageProjectUrl>
+    <Copyright>Copyright (c) 2026 Nick van Duijn</Copyright>
   </PropertyGroup>
 
   <ItemGroup>

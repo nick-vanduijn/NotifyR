@@ -49,9 +49,9 @@ Closure allocations for `(req, ct) => behavior.Handle(req, next, ct)` are replac
 
 The `ConditionalWeakTable<object, object>` in `RequestHandlerWrapperImpl` avoids a `GetServices` DI call + `.ToArray()` allocation on every `Send` when no behaviors are registered. The cache is keyed by `IServiceScopeFactory` (or the provider itself when no scope factory is available), so the optimization is shared across all scopes in the same application. In production, behavior registrations are fixed at startup, so caching the "no behaviors" state is safe.
 
-### Why `ValueTask` for notification dispatch?
+### Why `Task` for notification dispatch?
 
-The `INotificationHandlerWrapperBase` interface uses `ValueTask` instead of `Task`. When no handlers are registered or all handlers complete synchronously, the struct state machine stays on the stack, avoiding a heap allocation.
+The `INotificationHandlerWrapperBase` interface uses `Task` directly. When handlers complete synchronously, the async state machine still allocates on the heap, but the simplification eliminates the `ValueTask` → `Task` conversion that previously happened in `Mediator.Publish`.
 
 ### Why compiled expression factories?
 

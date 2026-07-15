@@ -53,6 +53,18 @@ public class SendRequestTests
         await Assert.ThrowsAsync<OperationCanceledException>(
             () => mediator.Send(new Ping("cancel"), cts.Token));
     }
+
+    [Fact]
+    public async Task Send_PreCancelledToken_ThrowsBeforeHandlerResolution()
+    {
+        using var cts = new CancellationTokenSource();
+        await cts.CancelAsync();
+
+        var mediator = MediatorBuilder.Build().GetRequiredService<IMediator>();
+
+        await Assert.ThrowsAsync<OperationCanceledException>(
+            () => mediator.Send(new Ping("pre-cancel"), cts.Token));
+    }
 }
 
 public record VoidRequest : IRequest;
@@ -63,7 +75,7 @@ public class VoidHandler : IRequestHandler<VoidRequest>
         => Unit.Completed;
 }
 
-public class CancellablePingHandler : IRequestHandler<Ping, Pong>
+internal class CancellablePingHandler : IRequestHandler<Ping, Pong>
 {
     public Task<Pong> Handle(Ping request, CancellationToken cancellationToken)
     {

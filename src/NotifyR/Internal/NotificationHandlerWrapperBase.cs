@@ -2,7 +2,7 @@ namespace NotifyR;
 
 internal interface INotificationHandlerWrapperBase
 {
-    ValueTask Handle(
+    Task Handle(
         INotification notification,
         IServiceProvider provider,
         CancellationToken cancellationToken);

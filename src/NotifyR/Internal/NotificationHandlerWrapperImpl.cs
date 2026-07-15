@@ -6,14 +6,26 @@ namespace NotifyR;
 internal sealed class NotificationHandlerWrapperImpl<TNotification> : INotificationHandlerWrapperBase
     where TNotification : INotification
 {
-    async ValueTask INotificationHandlerWrapperBase.Handle(
+    async Task INotificationHandlerWrapperBase.Handle(
         INotification notification,
         IServiceProvider provider,
         CancellationToken cancellationToken)
     {
+        var options = provider.GetRequiredService<NotifyROptions>();
+        var handlers = provider.GetServices<INotificationHandler<TNotification>>().ToArray();
+
+        if (handlers.Length is 0)
+        {
+            if (options.ThrowOnNoHandlers)
+                throw new InvalidOperationException(
+                    $"No notification handler registered for {typeof(TNotification).Name}.");
+
+            return;
+        }
+
         List<Exception>? exceptions = null;
 
-        foreach (var handler in provider.GetServices<INotificationHandler<TNotification>>())
+        foreach (var handler in handlers)
         {
             cancellationToken.ThrowIfCancellationRequested();
 

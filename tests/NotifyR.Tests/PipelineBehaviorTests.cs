@@ -19,22 +19,18 @@ public class NoBehaviorPipelineTests
 
 public class WithBehaviorPipelineTests
 {
-    private const string behaviourKey = "behavior";
+    private const string BehaviourKey = "behavior";
 
-    private sealed class Ping2 : IRequest<Pong2>
+    public sealed class Ping2 : IRequest<Pong2>
     {
         public string Message { get; }
         public Ping2(string message) => Message = message;
     }
-    private sealed class Pong2
-    {
-        public string Message { get; }
-        public Pong2(string message) => Message = message;
-    }
-    private sealed class Ping2Handler : IRequestHandler<Ping2, Pong2>
+    public sealed class Pong2;
+    public sealed class Ping2Handler : IRequestHandler<Ping2, Pong2>
     {
         public Task<Pong2> Handle(Ping2 request, CancellationToken cancellationToken)
-            => Task.FromResult(new Pong2(request.Message));
+            => Task.FromResult(new Pong2());
     }
 
     [Fact]
@@ -45,13 +41,13 @@ public class WithBehaviorPipelineTests
         services.AddNotifyR(cfg =>
             cfg.RegisterServicesFromAssemblyContaining<Ping2Handler>());
         services.AddTransient<IPipelineBehavior<Ping2, Pong2>>(
-            _ => new TestBehavior<Ping2, Pong2>(_ => order.Add(behaviourKey)));
+            _ => new TestBehavior<Ping2, Pong2>(_ => order.Add(BehaviourKey)));
         using var provider = services.BuildServiceProvider();
         var mediator = provider.GetRequiredService<IMediator>();
 
         await mediator.Send(new Ping2("wrap"));
 
-        Assert.Equal([behaviourKey], order);
+        Assert.Equal([BehaviourKey], order);
     }
 
     [Fact]
@@ -68,13 +64,13 @@ public class WithBehaviorPipelineTests
         using var providerB = new ServiceCollection()
             .AddNotifyR(cfg => cfg.RegisterServicesFromAssemblyContaining<Ping2Handler>())
             .AddTransient<IPipelineBehavior<Ping2, Pong2>>(
-                _ => new TestBehavior<Ping2, Pong2>(_ => order.Add(behaviourKey)))
+                _ => new TestBehavior<Ping2, Pong2>(_ => order.Add(BehaviourKey)))
             .BuildServiceProvider();
 
         var mediatorB = providerB.GetRequiredService<IMediator>();
         await mediatorB.Send(new Ping2("cross-provider"));
 
-        Assert.Equal([behaviourKey], order);
+        Assert.Equal([BehaviourKey], order);
     }
 
     [Fact]

@@ -1,6 +1,6 @@
 namespace NotifyR;
 
-public sealed class Mediator(IServiceProvider provider) : IMediator
+internal sealed class Mediator(IServiceProvider provider) : IMediator
 {
     public Task<TResponse> Send<TResponse>(
         IRequest<TResponse> request,
@@ -27,6 +27,6 @@ public sealed class Mediator(IServiceProvider provider) : IMediator
         var wrapper = WrapperCache<INotificationHandlerWrapperBase>
             .GetOrCreate(notification.GetType(), NotificationHandlerWrapperFactory.Create);
 
-        return wrapper.Handle(notification, provider, cancellationToken).AsTask();
+        return wrapper.Handle(notification, provider, cancellationToken);
     }
 }

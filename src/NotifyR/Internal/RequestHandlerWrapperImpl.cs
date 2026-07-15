@@ -6,16 +6,15 @@ namespace NotifyR;
 internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : IRequestHandlerWrapperBase<TResponse>
     where TRequest : IRequest<TResponse>
 {
-    private static readonly ConditionalWeakTable<object, object> s_noBehaviorsCache = new();
-    private static readonly object s_sentinel = new();
-    private static readonly ConditionalWeakTable<object, object>.CreateValueCallback s_addSentinel =
-        static _ => s_sentinel;
+    private static readonly ConditionalWeakTable<object, IPipelineBehavior<TRequest, TResponse>[]> s_behaviorsCache = new();
 
     Task<TResponse> IRequestHandlerWrapperBase<TResponse>.Handle(
         IRequest<TResponse> request,
         IServiceProvider provider,
         CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         var handler = provider.GetRequiredService<IRequestHandler<TRequest, TResponse>>();
         var behaviors = GetBehaviors(provider);
         var pipeline = BuildPipeline(handler, behaviors);
@@ -28,15 +27,8 @@ internal sealed class RequestHandlerWrapperImpl<TRequest, TResponse> : IRequestH
         var scopeFactory = provider.GetService<IServiceScopeFactory>();
         var key = scopeFactory ?? (object)provider;
 
-        if (s_noBehaviorsCache.TryGetValue(key, out _))
-            return [];
-
-        var behaviors = provider.GetServices<IPipelineBehavior<TRequest, TResponse>>().ToArray();
-
-        if (behaviors.Length is 0)
-            s_noBehaviorsCache.GetValue(key, s_addSentinel);
-
-        return behaviors;
+        return s_behaviorsCache.GetValue(key, _ =>
+            provider.GetServices<IPipelineBehavior<TRequest, TResponse>>().ToArray());
     }
 
     private static RequestHandlerDelegate<TRequest, TResponse> BuildPipeline(

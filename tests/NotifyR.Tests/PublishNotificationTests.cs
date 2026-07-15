@@ -106,4 +106,32 @@ public class PublishNotificationTests
 
         Assert.Equal(2, ex.InnerExceptions.Count);
     }
+
+    [Fact]
+    public async Task Publish_WithNoHandlers_CompletesSuccessfully()
+    {
+        var services = new ServiceCollection();
+        services.AddNotifyR(cfg =>
+            cfg.RegisterServicesFromAssemblyContaining<PingHandler>());
+        var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
+
+        await mediator.Publish(new MyNotification("no-handlers"));
+    }
+
+    [Fact]
+    public async Task Publish_WithNoHandlersAndThrowOnNoHandlers_ThrowsInvalidOperation()
+    {
+        var services = new ServiceCollection();
+        services.AddNotifyR(cfg =>
+        {
+            cfg.RegisterServicesFromAssemblyContaining<PingHandler>();
+            cfg.SetThrowOnNoHandlers();
+        });
+        var mediator = services.BuildServiceProvider().GetRequiredService<IMediator>();
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => mediator.Publish(new MyNotification("no-handlers")));
+
+        Assert.Contains("MyNotification", ex.Message);
+    }
 }

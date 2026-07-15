@@ -5,8 +5,9 @@ namespace NotifyR;
 
 public sealed class NotifyRConfiguration
 {
-    internal readonly List<Assembly> AssembliesToScan = [];
+    internal List<Assembly> AssembliesToScan { get; } = [];
     internal ServiceLifetime Lifetime { get; private set; } = ServiceLifetime.Transient;
+    internal bool ThrowOnNoHandlers { get; private set; }
 
     public NotifyRConfiguration RegisterServicesFromAssembly(Assembly assembly)
     {
@@ -35,6 +36,13 @@ public sealed class NotifyRConfiguration
         }
 
         Lifetime = lifetime;
+
+        return this;
+    }
+
+    public NotifyRConfiguration SetThrowOnNoHandlers(bool throwOnNoHandlers = true)
+    {
+        ThrowOnNoHandlers = throwOnNoHandlers;
 
         return this;
     }

@@ -19,6 +19,11 @@ public static class ServiceCollectionExtensions
     {
         ValidateArguments(services, configure);
 
+        if (services.Any(d => d.ServiceType == typeof(IMediator)))
+        {
+            return services;
+        }
+
         var config = new NotifyRConfiguration();
         configure(config);
 
@@ -46,6 +51,7 @@ public static class ServiceCollectionExtensions
         IServiceCollection services,
         NotifyRConfiguration config)
     {
+        services.AddSingleton(new NotifyROptions { ThrowOnNoHandlers = config.ThrowOnNoHandlers });
         services.Add(new ServiceDescriptor(typeof(IMediator), typeof(Mediator), config.Lifetime));
     }
 
@@ -85,7 +91,7 @@ public static class ServiceCollectionExtensions
     }
 
     private static bool IsConcreteType(Type type) =>
-        type is { IsAbstract: false, IsInterface: false, IsGenericTypeDefinition: false };
+        type is { IsAbstract: false, IsInterface: false, IsGenericTypeDefinition: false } && type.IsVisible;
 
     private static void RegisterHandlerInterfaces(
         IServiceCollection services,
@@ -109,6 +115,7 @@ public static class ServiceCollectionExtensions
         var openGeneric = interfaceType.GetGenericTypeDefinition();
 
         return openGeneric == typeof(IRequestHandler<,>)
+            || openGeneric == typeof(IRequestHandler<>)
             || openGeneric == typeof(INotificationHandler<>)
             || openGeneric == typeof(IPipelineBehavior<,>);
     }
